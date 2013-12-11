@@ -40,7 +40,7 @@ import Data.Cache (Cache)
 import Data.Maybe.Utils (unsafeUnjust)
 import Data.Store.Guid (Guid)
 import Data.Store.IRef (Tag)
-import Data.Typeable (Typeable, Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Data.Expr.IRef (DefIM)
 import Lamdu.Data.Infer.Deref (DerefedTV)
 import Lamdu.Data.Infer.Load (Loader(..))
@@ -75,7 +75,7 @@ loader =
 
 load ::
   ( Binary a, Typeable a
-  , MonadA m, Typeable1 m
+  , MonadA m, Typeable m
   ) =>
   ExprIRef.ExprM m a ->
   StateT (InferContext m) (MaybeT (CT m)) (LoadedExpr m a)
@@ -104,7 +104,7 @@ eitherTToMaybeT :: Functor m => EitherT l m a -> MaybeT m a
 eitherTToMaybeT = (MaybeT . fmap eitherToMaybe . runEitherT)
 
 memoInferAt ::
-  (Typeable a, Binary a, Typeable1 m, MonadA m) =>
+  (Typeable a, Binary a, Typeable m, MonadA m) =>
   Infer.TypedValue (DefIM m) ->
   LoadedExpr m a ->
   StateT (InferContext m) (MaybeT (CT m))
@@ -116,14 +116,14 @@ memoInferAt tv expr = do
   memoInferH $ Infer.inferAt tv expr
 
 memoInfer ::
-  (Typeable a, Binary a, Typeable1 m, MonadA m) =>
+  (Typeable a, Binary a, Typeable m, MonadA m) =>
   Infer.Scope (DefIM m) -> LoadedExpr m a ->
   StateT (InferContext m) (MaybeT (CT m))
   (LoadedExpr m (InferDeref.DerefedTV (DefIM m), a))
 memoInfer scope expr = memoInferH $ Infer.infer scope expr
 
 memoInferH ::
-  ( Typeable1 m, MonadA m
+  ( Typeable m, MonadA m
   , Typeable a, Binary a
   ) =>
   Infer.M (DefIM m) (LoadedExpr m (Infer.TypedValue (DefIM m), a)) ->
@@ -141,7 +141,7 @@ inferWithVariables ::
   , RandomGen gen
   , MonadA m
   , Binary a
-  , Typeable1 m
+  , Typeable m
   , Typeable a
   ) =>
   gen -> DefIM m -> LoadedExpr m a ->
@@ -191,7 +191,7 @@ data InferredWithImplicits m a = InferredWithImplicits
 Lens.makeLenses ''InferredWithImplicits
 
 inferAddImplicits ::
-  (Show gen, RandomGen gen, MonadA m, Typeable1 m, Typeable (m ())) =>
+  (Show gen, RandomGen gen, MonadA m, Typeable m) =>
   gen ->
   DefIM m ->
   ExprIRef.ExprM m (Load.ExprPropertyClosure (Tag m)) ->

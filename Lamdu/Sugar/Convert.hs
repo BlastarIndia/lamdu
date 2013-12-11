@@ -17,7 +17,7 @@ import Data.Monoid (Monoid(..))
 import Data.Store.Guid (Guid)
 import Data.Store.IRef (Tag)
 import Data.Traversable (traverse)
-import Data.Typeable (Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Data.Expr.IRef (DefIM)
 import Lamdu.Data.Infer.Load (LoadedDef(..), ldDef)
 import Lamdu.Sugar.Convert.Monad (ConvertM, Context(..))
@@ -131,7 +131,7 @@ getInferredVal x =
   & fromMaybe ExprUtil.pureHole
 
 convertPositionalFuncParam ::
-  (Typeable1 m, MonadA m, Monoid a) => Expr.Lam Guid (InputExpr m a) ->
+  (Typeable m, MonadA m, Monoid a) => Expr.Lam Guid (InputExpr m a) ->
   InputPayload m a ->
   ConvertM m (FuncParam MStoredName m (ExpressionU m a))
 convertPositionalFuncParam (Expr.Lam _k paramGuid paramType body) lamExprPl = do
@@ -153,7 +153,7 @@ convertPositionalFuncParam (Expr.Lam _k paramGuid paramType body) lamExprPl = do
     lamGuid = lamExprPl ^. ipGuid
 
 convertLam ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   Expr.Lam Guid (InputExpr m a) ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertLam lam@(Expr.Lam k paramGuid _paramType result) exprPl = do
@@ -184,7 +184,7 @@ convertLam lam@(Expr.Lam k paramGuid _paramType result) exprPl = do
       KType -> ExprUtil.exprHasGetVar paramGuid result
 
 convertParameterRef ::
-  (MonadA m, Typeable1 m) => Guid ->
+  (MonadA m, Typeable m) => Guid ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertParameterRef parGuid exprPl = do
   recordParamsMap <- (^. ConvertM.scRecordParamsInfos) <$> ConvertM.readContext
@@ -211,7 +211,7 @@ jumpToDefI ::
 jumpToDefI cp defI = IRef.guid defI <$ DataOps.newPane cp defI
 
 convertGetVariable ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   Expr.VariableRef (Infer.LoadedDef (DefIM m)) Guid ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertGetVariable varRef exprPl = do
@@ -232,19 +232,19 @@ convertGetVariable varRef exprPl = do
         }
 
 convertLiteralInteger ::
-  (MonadA m, Typeable1 m) => Integer ->
+  (MonadA m, Typeable m) => Integer ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertLiteralInteger i exprPl = ConvertExpr.make exprPl $ BodyLiteralInteger i
 
 convertTag ::
-  (MonadA m, Typeable1 m) => Guid ->
+  (MonadA m, Typeable m) => Guid ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertTag tag exprPl = do
   name <- getStoredNameS tag
   ConvertExpr.make exprPl . BodyTag $ TagG tag name
 
 convertAtom ::
-  (MonadA m, Typeable1 m) => String ->
+  (MonadA m, Typeable m) => String ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertAtom str exprPl =
   ConvertExpr.make exprPl $ BodyAtom str
@@ -305,7 +305,7 @@ recordFieldActions defaultGuid exprIRef iref =
       _ -> return (defaultGuid, oldFields)
 
 convertField ::
-  (Typeable1 m, MonadA m, Monoid a) =>
+  (Typeable m, MonadA m, Monoid a) =>
   Maybe (ExprIRef.ExprIM m) -> Guid ->
   ( InputExpr m a
   , InputExpr m a
@@ -322,7 +322,7 @@ convertField mIRef defaultGuid (tagExpr, expr) = do
     }
 
 convertRecord ::
-  (Typeable1 m, MonadA m, Monoid a) =>
+  (Typeable m, MonadA m, Monoid a) =>
   Expr.Record (InputExpr m a) ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertRecord (Expr.Record k fields) exprPl = do
@@ -351,7 +351,7 @@ convertRecord (Expr.Record k fields) exprPl = do
           )
 
 convertGetField ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   Expr.GetField (InputExpr m a) ->
   InputPayload m a ->
   ConvertM m (ExpressionU m a)
@@ -415,7 +415,7 @@ removeRedundantTypes =
       Lens.has (rBody . _BodyRecord) e
 
 convertExpressionI ::
-  (Typeable1 m, MonadA m, Monoid a) =>
+  (Typeable m, MonadA m, Monoid a) =>
   InputExpr m a -> ConvertM m (ExpressionU m a)
 convertExpressionI ee =
   ($ ee ^. Expr.ePayload) $
@@ -438,7 +438,7 @@ isCompleteType =
   Lens.nullOf (Lens.folding ExprUtil.subExprs . ExprLens.exprHole)
 
 mkContext ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   Anchors.Code (Transaction.MkProperty m) (Tag m) ->
   InferContext m -> InferContext m -> InferContext m ->
   T m (Context m)
@@ -456,7 +456,7 @@ mkContext cp holeInferContext structureInferContext withVarsInferContext = do
     }
 
 convertExpressionPure ::
-  (MonadA m, Typeable1 m, RandomGen g, Monoid a) =>
+  (MonadA m, Typeable m, RandomGen g, Monoid a) =>
   Anchors.CodeProps m -> g ->
   LoadedExpr m a -> CT m (ExpressionU m a)
 convertExpressionPure cp gen res = do
@@ -488,7 +488,7 @@ data FieldParam m a = FieldParam
   }
 
 mkRecordParams ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   ConvertM.RecordParamsInfo m -> Guid -> [FieldParam m a] ->
   InputExpr m a ->
   Maybe (ExprIRef.ExprIM m) ->
@@ -636,7 +636,7 @@ paramTypeExprMM origParamType
       & InputExpr.makePure paramTypeGen
 
 convertDefinitionParams ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   ConvertM.RecordParamsInfo m -> [Guid] -> InputExpr m a ->
   ConvertM m
   ( [FuncParam MStoredName m (ExpressionU m a)]
@@ -768,7 +768,7 @@ mExtractWhere expr = do
     }
 
 convertWhereItems ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   [Guid] ->
   InputExpr m a ->
   ConvertM m ([WhereItem MStoredName m (ExpressionU m a)], InputExpr m a)
@@ -838,7 +838,7 @@ assertedGetProp _
 assertedGetProp msg _ = error msg
 
 convertDefinitionContent ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   ConvertM.RecordParamsInfo m -> [Guid] -> InputExpr m a ->
   ConvertM m (DefinitionContent MStoredName m (ExpressionU m a))
 convertDefinitionContent recordParamsInfo usedTags expr = do
@@ -865,7 +865,7 @@ convertDefinitionContent recordParamsInfo usedTags expr = do
         }
 
 convertDefIBuiltin ::
-  (Typeable1 m, MonadA m) => Anchors.CodeProps m ->
+  (Typeable m, MonadA m) => Anchors.CodeProps m ->
   Definition.Builtin -> DefIM m ->
   LoadedExpr m (Stored m) ->
   CT m (DefinitionBody MStoredName m (ExpressionU m [Guid]))
@@ -891,7 +891,7 @@ convertDefIBuiltin cp (Definition.Builtin name) defI defType =
       Definition.ContentBuiltin . Definition.Builtin
 
 makeTypeInfo ::
-  (Typeable1 m, MonadA m, Monoid a) =>
+  (Typeable m, MonadA m, Monoid a) =>
   Anchors.CodeProps m -> DefIM m ->
   LoadedExpr m (Stored m, a) ->
   LoadedExpr m a ->
@@ -929,7 +929,7 @@ makeTypeInfo cp defI defType inferredType = do
     defGuid = IRef.guid defI
 
 convertDefIExpr ::
-  (MonadA m, Typeable1 m) => Anchors.CodeProps m ->
+  (MonadA m, Typeable m) => Anchors.CodeProps m ->
   ExprIRef.ExprM m (Load.ExprPropertyClosure (Tag m)) ->
   DefIM m ->
   LoadedExpr m (Stored m) ->
@@ -969,7 +969,7 @@ convertDefIExpr cp exprLoaded defI defType = do
     inferLoadedGen = ConvertExpr.mkGen 0 3 defGuid
 
 convertDefI ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   Anchors.CodeProps m ->
   -- TODO: Use DefinitionClosure?
   Definition.Definition

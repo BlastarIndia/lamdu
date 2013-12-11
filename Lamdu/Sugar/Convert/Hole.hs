@@ -19,7 +19,7 @@ import Data.Monoid (Monoid(..))
 import Data.Monoid.Applicative (ApplicativeMonoid(..))
 import Data.Store.Guid (Guid)
 import Data.Traversable (sequenceA, traverse)
-import Data.Typeable (Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Data.Expr.IRef (DefIM)
 import Lamdu.Data.Infer.Deref (DerefedTV)
 import Lamdu.Data.Infer.Load (ldDef)
@@ -52,14 +52,14 @@ import qualified Lamdu.Sugar.Convert.Monad as ConvertM
 import qualified System.Random as Random
 
 convert ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convert exprPl =
   convertPlain exprPl
   <&> rPayload . plActions . Lens._Just . mSetToHole .~ Nothing
 
 convertPlain ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convertPlain exprPl =
   maybe convertUntypedHole convertPlainTyped (Lens.sequenceOf ipInferred exprPl)
@@ -190,7 +190,7 @@ idTranslations mkGen convertedExpr writtenExpr =
     tell src dst = tells [(src, dst)]
 
 mkWritableHoleActions ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   InputPayloadP (Inferred m) (Stored m) () ->
   ConvertM m (HoleActions MStoredName m)
 mkWritableHoleActions exprPlStored = do
@@ -223,7 +223,7 @@ mkWritableHoleActions exprPlStored = do
     inferred = exprPlStored ^. ipInferred
 
 mkHole ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   InputPayloadP (Inferred m) (Maybe (Stored m)) a ->
   ConvertM m (Hole MStoredName m (ExpressionU m a))
 mkHole exprPl = do
@@ -240,7 +240,7 @@ mkHole exprPl = do
     }
 
 mkHoleInferred ::
-  (Typeable1 m, MonadA m) =>
+  (Typeable m, MonadA m) =>
   DerefedTV (DefIM m) ->
   ConvertM m (HoleInferred MStoredName m)
 mkHoleInferred inferred = do
@@ -284,7 +284,7 @@ mkHoleInferred inferred = do
       i & void & ExprLens.lambdaParamTypes .~ ExprUtil.pureHole
 
 inferOnTheSide ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   ConvertM.Context m ->
   Infer.Scope (DefIM m) ->
   ExprIRef.ExprM m () ->
@@ -456,7 +456,7 @@ writeConvertTypeChecked gen sugarContext holeStored (inferredExpr, newCtx) = do
       }
 
 mkHoleResult ::
-  (Typeable1 m, MonadA m, Cache.Key a, Binary a, Monoid a) =>
+  (Typeable m, MonadA m, Cache.Key a, Binary a, Monoid a) =>
   ConvertM.Context m ->
   InputPayloadP (Inferred m) (Stored m) () ->
   (Guid -> Random.StdGen) ->

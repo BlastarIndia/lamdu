@@ -11,7 +11,7 @@ import Control.MonadA (MonadA)
 import Data.Store.Guid (Guid)
 import Data.Store.IRef (Tag)
 import Data.Traversable (traverse)
-import Data.Typeable (Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Sugar.Convert.Monad (ConvertM)
 import Lamdu.Sugar.Internal
 import Lamdu.Sugar.Types
@@ -55,7 +55,7 @@ mkActions sugarContext stored =
   }
 
 make ::
-  (Typeable1 m, MonadA m) => InputPayload m a ->
+  (Typeable m, MonadA m) => InputPayload m a ->
   BodyU m a -> ConvertM m (ExpressionU m a)
 make exprPl body = do
   sugarContext <- ConvertM.readContext

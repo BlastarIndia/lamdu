@@ -14,7 +14,7 @@ import Control.Monad.Trans.State (StateT, runState)
 import Data.Binary (Binary)
 import Data.Cache (Cache)
 import Data.Store.Transaction (Transaction)
-import Data.Typeable (Typeable, Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Data.Expr.IRef (DefIM)
 import Lamdu.Data.Infer.Deref (DerefedTV)
 import qualified Control.Lens as Lens
@@ -59,7 +59,7 @@ emptyContext :: Infer.Context (DefIM m)
 emptyContext = Infer.emptyContext $ Random.mkStdGen 0
 
 initialInferContext ::
-  Typeable1 m => DefIM m -> (Infer.TypedValue (DefIM m), InferContext m)
+  Typeable m => DefIM m -> (Infer.TypedValue (DefIM m), InferContext m)
 initialInferContext defI =
   runState (Load.newDefinition defI) emptyContext & Lens._2 %~ wrapContext
   where

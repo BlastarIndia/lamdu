@@ -14,7 +14,7 @@ import Data.Maybe.Utils (maybeToMPlus)
 import Data.Monoid (Monoid(..))
 import Data.Store.Guid (Guid)
 import Data.Traversable (traverse)
-import Data.Typeable (Typeable1)
+import Data.Typeable (Typeable)
 import Lamdu.Data.Anchors (PresentationMode(..))
 import Lamdu.Data.Expr.IRef (DefIM)
 import Lamdu.Sugar.Convert.Monad (ConvertM)
@@ -41,7 +41,7 @@ import qualified Lamdu.Sugar.Convert.Monad as ConvertM
 import qualified Lamdu.Sugar.RemoveTypes as SugarRemoveTypes
 
 convert ::
-  (Typeable1 m, MonadA m, Monoid a) =>
+  (Typeable m, MonadA m, Monoid a) =>
   Expr.Apply (InputExpr m a) ->
   InputPayload m a -> ConvertM m (ExpressionU m a)
 convert app@(Expr.Apply funcI argI) exprPl =
@@ -71,7 +71,7 @@ noRepetitions :: Ord a => [a] -> Bool
 noRepetitions x = length x == Set.size (Set.fromList x)
 
 convertLabeled ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   ExpressionU m a -> ExpressionU m a -> InputExpr m a -> InputPayload m a ->
   MaybeT (ConvertM m) (ExpressionU m a)
 convertLabeled funcS argS argI exprPl = do
@@ -122,7 +122,7 @@ convertLabeled funcS argS argI exprPl = do
       )
 
 makeCollapsed ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   InputPayload m a ->
   Guid -> GetVar MStoredName m -> Bool ->
   ExpressionU m a -> ConvertM m (ExpressionU m a)
@@ -143,7 +143,7 @@ makeCollapsed exprPl g compact hasInfo fullExpression =
     expandedGuid = Guid.combine (exprPl ^. ipGuid) $ Guid.fromString "polyExpanded"
 
 convertPrefix ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   ExpressionU m a -> InputExpr m a -> ExpressionU m a ->
   InputExpr m a -> InputPayload m a -> ConvertM m (ExpressionU m a)
 convertPrefix funcRef funcI argS argI applyPl
@@ -166,7 +166,7 @@ convertPrefix funcRef funcI argS argI applyPl
       }
 
 typeCheckIdentityAt ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   Infer.TypedValue (DefIM m) -> ConvertM m Bool
 typeCheckIdentityAt point = do
   sugarContext <- ConvertM.readContext
@@ -203,7 +203,7 @@ unwrap outerP argP argExpr = do
     mOrderedHoles = ConvertHole.orderedInnerHoles . fmap f <$> mArgInferred
 
 convertAppliedHole ::
-  (MonadA m, Typeable1 m, Monoid a) =>
+  (MonadA m, Typeable m, Monoid a) =>
   InputExpr m a -> ExpressionU m a -> InputExpr m a -> InputPayload m a ->
   MaybeT (ConvertM m) (ExpressionU m a)
 convertAppliedHole funcI argS argI exprPl = do

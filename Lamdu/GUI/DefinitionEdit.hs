@@ -9,7 +9,7 @@ import Control.MonadA (MonadA)
 import Data.Cache (Cache)
 import Data.Store.Transaction (Transaction)
 import Data.Traversable (sequenceA)
-import Data.Typeable (Typeable1)
+import Data.Typeable (Typeable)
 import Data.Vector.Vector2 (Vector2(..))
 import Graphics.UI.Bottle.Widget (Widget)
 import Lamdu.Config (Config)
@@ -43,7 +43,7 @@ type T = Transaction
 type CT m = StateT Cache (WE.WidgetEnvT (T m))
 
 make ::
-  (Typeable1 m, MonadA m) =>
+  (Typeable m, MonadA m) =>
   Anchors.CodeProps m -> Settings ->
   DefIM m -> CT m (WidgetT m)
 make cp settings defI = ExprGuiM.run ExpressionEdit.make cp settings $ do
@@ -140,7 +140,7 @@ makeExprDefinition def bodyExpr = do
     myId = WidgetIds.fromGuid guid
 
 loadConvertDefI ::
-  (MonadA m, Typeable1 m) =>
+  (MonadA m, Typeable m) =>
   Anchors.CodeProps m -> DefIM m ->
   StateT Cache (T m) (Sugar.DefinitionN m ExprGuiM.Payload)
 loadConvertDefI cp defI =
