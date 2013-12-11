@@ -58,9 +58,19 @@ instance Eq a => Monoid (SetList a) where
 
 type StoredName = String
 newtype NameGuidMap = NameGuidMap (Map StoredName (SetList Guid))
-  deriving (Show, Lens.At)
+  deriving (Show)
+
 type instance Lens.Index NameGuidMap = StoredName
 type instance Lens.IxValue NameGuidMap = SetList Guid
+
+-- ghc-7.7.20131205 fails deriving these instances on its own.
+instance Lens.Ixed NameGuidMap where
+  ix k f (NameGuidMap m) = NameGuidMap <$> Lens.ix k f m
+  {-# INLINE ix #-}
+instance Lens.At NameGuidMap where
+  at k f (NameGuidMap m) = NameGuidMap <$> Lens.at k f m
+  {-# INLINE at #-}
+
 instance Monoid NameGuidMap where
   mempty = NameGuidMap Map.empty
   NameGuidMap x `mappend` NameGuidMap y =
